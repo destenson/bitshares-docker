@@ -1,8 +1,14 @@
 #!/bin/bash
 
-if [ -n "$TRUSTED_FULL_NODE_PORT_8090_TCP_ADDR" ]; then
+if [ -e "/conf/cli-wallet/wallet.json" ]; then
+ echo "Copying predefined wallet.json file"
+ cp -v /conf/cli-wallet/wallet.json /wallet.json
+fi
+
+if [ -n "$NODE_PORT_8090_TCP_ADDR" ]; then
+ env
  /bitshares-2/programs/cli_wallet/cli_wallet \
-                        -s ws://${TRUSTED_FULL_NODE_PORT_8090_TCP_ADDR}:${TRUSTED_FULL_NODE_PORT_8090_TCP_PORT} \
+                        -s ws://${NODE_PORT_8090_TCP_ADDR}:${NODE_PORT_8090_TCP_PORT} \
                         -H 0.0.0.0:8092 \
                         -d 
 else
@@ -11,7 +17,7 @@ else
 ## Configuration Error
 ######################
 This docker has to be linked to a full-node with
-           --link trusted-full-node 
+           --link node 
 Otherwise it will not connect properly!
 EOF
 
