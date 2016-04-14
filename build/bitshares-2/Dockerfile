@@ -1,38 +1,26 @@
 FROM base/archlinux
 MAINTAINER Fabian Schuh <Fabian@cryptonomex.com>
 
-## Update package database
-RUN pacman -Sy
-
-## Install keyring for verification of sources
-RUN pacman --noconfirm -Sy archlinux-keyring
-RUN pacman-key --init
-RUN pacman-key --populate archlinux
-
-## Upgrade Archlinux
-RUN pacman --noconfirm -Syu
-RUN pacman-db-upgrade
-
-## Install build dependencies
-RUN pacman --noconfirm -S base-devel git openssh
-RUN pacman --noconfirm -S boost boost-libs 
-RUN pacman --noconfirm -S cmake wget curl python
-
-## Fetching BitShares-2
-WORKDIR /
-RUN git clone https://github.com/bitshares/bitshares-2 /bitshares-2-git
-WORKDIR /bitshares-2-git
-RUN git submodule update --init --recursive
-
-## Building BitShares-2
 RUN mkdir /build
 WORKDIR /build
-RUN cmake -DCMAKE_BUILD_TYPE=Release /bitshares-2-git
-RUN make || make -j 1
 
-RUN mkdir /bitshares-2
-RUN cp -r /build/programs /bitshares-2/
+## Update package database
+RUN pacman -Sy && \
+    pacman --noconfirm -Sy archlinux-keyring && \
+    pacman-key --init && \
+    pacman-key --populate archlinux && \
+    pacman --noconfirm -Syu && \
+    pacman-db-upgrade && \
+    pacman --noconfirm -S base-devel git openssh boost boost-libs cmake wget curl python && \
+    git clone -b "$TAG" https://github.com/bitshares/bitshares-2 /bitshares-2-git && \
+    git -C /bitshares-2-git submodule update --init --recursive && \
+    cmake -DCMAKE_BUILD_TYPE=Release /bitshares-2-git && \
+    make || make -j 1 && \
+    cp /build/programs/witness_node/witness_node \ 
+       /build/programs/delayed_node/delayed_node \ 
+       /build/programs/cli_wallet/cli_wallet \ 
+       /usr/local/bin && \
+    pacman -S -cc && \
+    rm -rf /bitshares-2-git /build /tmp/*
 
-## Cleanup to reduce container size
-RUN rm -rf /bitshares-2-git \
-           /build
+WORKDIR /
